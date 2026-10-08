@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Для тебя ❤</title>
+<style>
+:root{--bg:#150b24;--card:#22123a;--line:#3a2561;--accent:#ffc857;--violet:#8b5cf6;--text:#f1eaff;--muted:#a897c9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+main{max-width:640px;margin:0 auto;padding:16px 14px 110px}
+h2{margin:8px 0 14px}
+button{font:inherit;padding:10px 16px;border-radius:12px;border:none;background:var(--accent);color:#2a1740;font-weight:600;cursor:pointer}
+button.sec{background:var(--card);color:var(--text);border:1px solid var(--line)}
+button.mini{padding:4px 10px;font-size:.8rem;background:transparent;color:var(--muted);border:1px solid var(--line)}
+button.mini.on{color:var(--accent);border-color:var(--accent)}
+button:disabled{opacity:.5}
+input,textarea{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text)}
+textarea{min-height:90px;resize:vertical}
+label{display:block;color:var(--muted);font-size:.85rem;margin:10px 0 4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.card.pin{border-color:var(--accent)}
+.head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.head .who{flex:1;cursor:pointer;font-weight:600}.head small{display:block;color:var(--muted);font-weight:400}
+.sm{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--line)}
+.card p{margin:0;white-space:pre-wrap;word-wrap:break-word;line-height:1.5}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:10px}
+.acts{display:flex;gap:6px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.grid img{width:100%;aspect-ratio:1;object-fit:cover;cursor:pointer;display:block;background:var(--card)}
+.empty{color:var(--muted);text-align:center;padding:24px 0}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#1b0f2e;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav button{flex:1;background:none;color:var(--muted);border-radius:0;padding:12px 0;font-size:.85rem;font-weight:500}
+nav button.on{color:var(--accent)}nav button span{display:block;font-size:1.3rem}
+.tab{display:none}.tab.on{display:block}
+.prof{text-align:center}
+.ava{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);background:var(--card);display:block;margin:6px auto}
+.stats{display:flex;justify-content:space-around;margin:14px 0}.stats b{display:block;font-size:1.2rem;color:var(--accent)}.stats small{color:var(--muted)}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:10px 0 4px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--violet),var(--accent));width:0}
+.big{font-size:2.6rem;color:var(--accent);font-weight:700;line-height:1}
+dialog{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:18px;width:min(92vw,420px);max-height:90vh}
+dialog::backdrop{background:#000b}
+dialog img.full{width:100%;max-height:55vh;object-fit:contain;border-radius:12px}
+#login{max-width:420px;margin:12vh auto;text-align:center}
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <h2>Для тебя ❤</h2>
+  <p style="color:var(--muted)">Войди по почте: пришлём код</p>
+  <div id="step1">
+    <input id="email" type="email" placeholder="Твоя почта" autocomplete="email">
+    <div class="row" style="justify-content:center"><button id="sendCode">Получить код</button></div>
+  </div>
+  <div id="step2" hidden>
+    <p style="color:var(--muted)">Код отправлен на <b id="sentTo"></b>. Проверь и папку «Спам».</p>
+    <input id="code" inputmode="numeric" placeholder="Код из письма" autocomplete="one-time-code">
+    <div class="row" style="justify-content:center"><button class="sec" id="back">Назад</button><button id="verify">Войти</button></div>
+  </div>
+  <p id="lerr" style="color:#ff8a8a"></p>
+</div>
+
+<main id="app" hidden>
+  <section class="tab on" id="t-feed">
+    <h2>Мысли</h2>
+    <div class="card"><textarea id="note" placeholder="О чём думаешь сегодня?"></textarea>
+      <div class="row"><span></span><button id="post">Опубликовать</button></div></div>
+    <div id="notes"></div>
+  </section>
+  <section class="tab" id="t-photos">
+    <h2>Фото</h2>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+    <div class="card"><input id="cap" placeholder="Подпись (необязательно)">
+      <div class="row"><span></span><button id="pick">📷 Добавить фото</button></div></div>
+    <div class="grid" id="grid"></div><div class="empty" id="pe"></div>
+  </section>
+  <section class="tab prof" id="t-prof">
+    <img class="ava" id="ava" alt=""><h2 id="name" style="margin:4px 0"></h2>
+    <div id="bio" style="white-space:pre-wrap;margin:6px 0 14px"></div>
+    <div id="own"><button class="sec" id="edit">Редактировать профиль</button> <button class="sec" id="out">Выйти</button></div>
+    <div class="card" style="margin-top:14px"><div style="color:var(--muted)">🪖 До дембеля осталось</div>
+      <div class="big" id="dmd">—</div><div class="bar"><i id="dmb"></i></div><small id="dmp" style="color:var(--muted)"></small></div>
+    <div class="stats"><div><b id="s1">0</b><small>мыслей</small></div><div><b id="s2">0</b><small>фото</small></div></div>
+    <div class="grid" id="grid2"></div>
+  </section>
+  <nav>
+    <button class="on" data-t="feed"><span>✍️</span>Мысли</button>
+    <button data-t="photos"><span>🖼️</span>Фото</button>
+    <button data-t="prof"><span>👤</span>Профиль</button>
+  </nav>
+</main>
+
+<dialog id="pv"><img class="full" id="pvi" alt=""><p id="pvc"></p><small id="pvw" style="color:var(--muted)"></small>
+  <div class="row"><button class="sec" id="pvx">Закрыть</button><span class="acts"><button class="mini" id="pvl"></button><button class="mini" id="pve">Подпись</button><button class="mini" id="pvd">Удалить</button></span></div></dialog>
+<dialog id="ed"><h3 style="margin-top:0">Профиль</h3>
+  <button class="sec" id="avb">Сменить аватар</button><input type="file" id="avf" accept="image/*" hidden>
+  <label>Имя</label><input id="en"><label>О себе</label><textarea id="eb"></textarea>
+  <label>Дата начала службы (дембель = +1 год)</label><input id="es" type="date">
+  <div class="row"><button class="sec" id="ec">Отмена</button><button id="eo">Сохранить</button></div></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ====== НАСТРОЙКИ: замените два значения ======
+const SUPABASE_URL = 'https://zppnbzdpenettoqmqugu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_fIPI93loljydEmKz41Q_KA_GDNnEI2W';
+// ==============================================
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const mk = (t, p = {}, k = []) => { const e = Object.assign(document.createElement(t), p); e.append(...k); return e };
+let me = null, viewing = null, P = {}, notes = [], photos = [], likes = [], urls = {}, newAva = null;
+const AVA = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#3a2561"/><circle cx="50" cy="38" r="18" fill="#a897c9"/><ellipse cx="50" cy="90" rx="32" ry="26" fill="#a897c9"/></svg>');
+const fmt = t => new Date(t).toLocaleString('ru', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+const av = id => (P[id] && urls[P[id].avatar]) || AVA;
+
+// ---- вход по почте ----
+$('sendCode').onclick = async () => {
+  const email = $('email').value.trim(); if (!email) return;
+  $('lerr').textContent = ''; $('sendCode').disabled = true;
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  $('sendCode').disabled = false;
+  if (error) return $('lerr').textContent = error.status === 429 ? 'Слишком часто. Подожди минуту и попробуй снова.' : 'Не удалось отправить код. Проверь почту.';
+  $('sentTo').textContent = email; $('step1').hidden = true; $('step2').hidden = false;
+};
+$('back').onclick = () => { $('step2').hidden = true; $('step1').hidden = false; $('lerr').textContent = '' };
+$('verify').onclick = async () => {
+  const token = $('code').value.trim(); if (!token) return;
+  $('lerr').textContent = ''; $('verify').disabled = true;
+  const { error } = await sb.auth.verifyOtp({ email: $('email').value.trim(), token, type: 'email' });
+  $('verify').disabled = false;
+  if (error) return $('lerr').textContent = 'Неверный или просроченный код.';
+  start();
+};
+
+// ---- данные ----
+async function signUrls(paths) {
+  const need = [...new Set(paths.filter(p => p && !urls[p]))];
+  if (!need.length) return;
+  const { data } = await sb.storage.from('photos').createSignedUrls(need, 3600);
+  (data || []).forEach(x => { if (x.signedUrl) urls[x.path] = x.signedUrl });
+}
+async function load() {
+  const [a, b, c, d] = await Promise.all([
+    sb.from('profiles').select('*'),
+    sb.from('notes').select('*').order('created_at', { ascending: false }),
+    sb.from('photos').select('*').order('created_at', { ascending: false }),
+    sb.from('likes').select('*')]);
+  P = {}; (a.data || []).forEach(p => P[p.id] = p);
+  notes = (b.data || []).sort((x, y) => (y.pinned ? 1 : 0) - (x.pinned ? 1 : 0) || new Date(y.created_at) - new Date(x.created_at));
+  photos = c.data || []; likes = d.data || [];
+  await signUrls([...photos.map(p => p.path), ...Object.values(P).map(p => p.avatar)]);
+  render();
+}
+const likeInfo = id => ({ n: likes.filter(l => l.item_id === id).length, mine: likes.some(l => l.item_id === id && l.user_id === me.id) });
+async function toggleLike(id) {
+  const { mine } = likeInfo(id);
+  if (mine) await sb.from('likes').delete().eq('item_id', id).eq('user_id', me.id);
+  else await sb.from('likes').insert({ item_id: id });
+  await load();
+}
+function likeBtn(id, cb) {
+  const { n, mine } = likeInfo(id);
+  return mk('button', { className: 'mini' + (mine ? ' on' : ''), textContent: '❤ ' + n, onclick: cb || (() => toggleLike(id)) });
+}
+function who(uid, date) {
+  const w = mk('div', { className: 'who', onclick: () => openProfile(uid) }, [(P[uid] || {}).name || 'Без имени', mk('small', { textContent: fmt(date) })]);
+  return mk('div', { className: 'head' }, [mk('img', { className: 'sm', src: av(uid) }), w]);
+}
+
+// ---- отрисовка ----
+function render() { renderNotes(); renderPhotos(); renderProfile() }
+function renderNotes() {
+  const el = $('notes'); el.innerHTML = '';
+  if (!notes.length) return el.append(mk('div', { className: 'empty', textContent: 'Пока нет записей. Напиши первую ✨' }));
+  notes.forEach(n => {
+    const h = who(n.user_id, n.created_at);
+    if (n.user_id === me.id) {
+      h.append(mk('div', { className: 'acts' }, [
+        mk('button', { className: 'mini', textContent: n.pinned ? 'Открепить' : '📌', onclick: async () => { await sb.from('notes').update({ pinned: !n.pinned }).eq('id', n.id); load() } }),
+        mk('button', { className: 'mini', textContent: '✎', onclick: async () => { const t = prompt('Изменить запись', n.text); if (t && t.trim()) { await sb.from('notes').update({ text: t.trim() }).eq('id', n.id); load() } } }),
+        mk('button', { className: 'mini', textContent: '✕', onclick: async () => { if (confirm('Удалить запись?')) { await sb.from('notes').delete().eq('id', n.id); load() } } })]));
+    }
+    el.append(mk('div', { className: 'card' + (n.pinned ? ' pin' : '') }, [h, mk('p', { textContent: (n.pinned ? '📌 ' : '') + n.text }), mk('div', { className: 'row' }, [likeBtn(n.id), mk('span')])]));
+  });
+}
+function gridInto(g, list) {
+  g.innerHTML = '';
+  list.forEach(p => g.append(mk('img', { src: urls[p.path] || '', loading: 'lazy', onclick: () => openPhoto(p) })));
+}
+function renderPhotos() { gridInto($('grid'), photos); $('pe').textContent = photos.length ? '' : 'Здесь пока пусто. Добавь первое фото ❤' }
+function renderProfile() {
+  const p = P[viewing] || {}, own = viewing === me.id;
+  $('name').textContent = p.name || ''; $('bio').textContent = p.bio || ''; $('ava').src = av(viewing);
+  $('own').hidden = !own;
+  $('s1').textContent = notes.filter(n => n.user_id === viewing).length;
+  const mine = photos.filter(x => x.user_id === viewing); $('s2').textContent = mine.length;
+  gridInto($('grid2'), mine);
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  if (p.service_date) {
+    const a = new Date(p.service_date + 'T00:00:00'), e = new Date(a); e.setFullYear(e.getFullYear() + 1);
+    const d = Math.max(0, Math.ceil((e - t0) / 864e5)), pc = Math.min(100, Math.max(0, (t0 - a) / (e - a) * 100));
+    $('dmd').textContent = d ? d + ' дн.' : 'Дембель! 🎉'; $('dmb').style.width = pc + '%'; $('dmp').textContent = Math.round(pc) + '% службы пройдено';
+  } else { $('dmd').textContent = '—'; $('dmb').style.width = '0'; $('dmp').textContent = own ? 'Укажи дату в «Редактировать профиль»' : '' }
+}
+function tab(t) {
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x.dataset.t === t));
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x.id === 't-' + t));
+  scrollTo(0, 0);
+}
+function openProfile(id) { viewing = id; renderProfile(); tab('prof') }
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.t === 'prof') viewing = me.id; renderProfile(); tab(b.dataset.t) });
+
+// ---- запись и фото ----
+$('post').onclick = async () => {
+  const t = $('note').value.trim(); if (!t) return;
+  $('post').disabled = true;
+  const { error } = await sb.from('notes').insert({ text: t });
+  $('post').disabled = false;
+  if (error) return alert('Не удалось опубликовать');
+  $('note').value = ''; load();
+};
+function shrink(file, max) {
+  return new Promise((res, rej) => {
+    const img = new Image(), u = URL.createObjectURL(file);
+    img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = img.width * k; c.height = img.height * k; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(u); c.toBlob(b => b ? res(b) : rej(), 'image/jpeg', .85) };
+    img.onerror = () => rej(new Error('read')); img.src = u;
+  });
+}
+async function uploadFile(file, max) {
+  const path = `${me.id}/${crypto.randomUUID()}.jpg`;
+  const { error } = await sb.storage.from('photos').upload(path, await shrink(file, max), { contentType: 'image/jpeg' });
+  if (error) throw error; return path;
+}
+$('pick').onclick = () => $('file').click();
+$('file').onchange = async () => {
+  const files = [...$('file').files]; if (!files.length) return;
+  $('pick').disabled = true; let n = 0;
+  for (const f of files) {
+    $('pick').textContent = `Загружаю ${++n} из ${files.length}…`;
+    try {
+      const path = await uploadFile(f, 1800);
+      const { error } = await sb.from('photos').insert({ path, caption: $('cap').value });
+      if (error) { await sb.storage.from('photos').remove([path]); throw error }
+    } catch (e) { alert('Ошибка загрузки фото') }
+  }
+  $('file').value = ''; $('cap').value = ''; $('pick').textContent = '📷 Добавить фото'; $('pick').disabled = false; load();
+};
+function openPhoto(p) {
+  const own = p.user_id === me.id;
+  $('pvi').src = urls[p.path]; $('pvc').textContent = p.caption || ''; $('pvw').textContent = (P[p.user_id] || {}).name + ' · ' + fmt(p.created_at);
+  const l = likeInfo(p.id); $('pvl').textContent = '❤ ' + l.n; $('pvl').className = 'mini' + (l.mine ? ' on' : '');
+  $('pvl').onclick = async () => { await toggleLike(p.id); openPhoto(photos.find(x => x.id === p.id) || p) };
+  $('pve').hidden = $('pvd').hidden = !own;
+  $('pve').onclick = async () => { const t = prompt('Подпись', p.caption || ''); if (t === null) return; await sb.from('photos').update({ caption: t }).eq('id', p.id); await load(); openPhoto(photos.find(x => x.id === p.id)) };
+  $('pvd').onclick = async () => { if (!confirm('Удалить фото?')) return; await sb.from('photos').delete().eq('id', p.id); await sb.storage.from('photos').remove([p.path]); $('pv').close(); load() };
+  if (!$('pv').open) $('pv').showModal();
+}
+$('pvx').onclick = () => $('pv').close();
+
+// ---- профиль ----
+$('edit').onclick = () => {
+  const p = P[me.id] || {}; newAva = null; $('avb').textContent = 'Сменить аватар';
+  $('en').value = p.name || ''; $('eb').value = p.bio || ''; $('es').value = p.service_date || ''; $('ed').showModal();
+};
+$('avb').onclick = () => $('avf').click();
+$('avf').onchange = () => { newAva = $('avf').files[0]; if (newAva) $('avb').textContent = 'Выбрано: ' + newAva.name.slice(0, 18) };
+$('ec').onclick = () => $('ed').close();
+$('eo').onclick = async () => {
+  $('eo').disabled = true;
+  try {
+    const upd = { name: $('en').value.trim() || 'Без имени', bio: $('eb').value, service_date: $('es').value || null };
+    if (newAva) upd.avatar = await uploadFile(newAva, 600);
+    const { error } = await sb.from('profiles').update(upd).eq('id', me.id);
+    if (error) throw error;
+    $('ed').close(); load();
+  } catch (e) { alert('Не удалось сохранить') }
+  $('eo').disabled = false;
+};
+$('out').onclick = async () => { await sb.auth.signOut(); location.reload() };
+
+// ---- старт ----
+async function start() {
+  const { data } = await sb.auth.getSession();
+  if (!data.session) { $('login').hidden = false; $('app').hidden = true; return }
+  me = data.session.user; viewing = me.id;
+  $('login').hidden = true; $('app').hidden = false;
+  await load();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && me) load() });
+start();
+</script>
+</body>
+</html>
